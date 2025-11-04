@@ -5,10 +5,10 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   TextInput,
-  ScrollView, // chỉ dùng cho filter ngang
+  ScrollView, 
 } from 'react-native';
 import { fetchPOHeaders } from '../services/poService';
-import POHeaderList from '../components/POHeaderList'; // FlatList bên trong
+import POHeaderList from '../components/POHeaderList'; 
 import '../global.css';
 
 export default function App() {
