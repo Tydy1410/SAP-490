@@ -6,11 +6,11 @@ export default function RootLayout() {
     <Stack>
       <Stack.Screen
         name="index"
-        options={{ title: "Danh sách PO" }}
+        options={{ headerShown: false, title: "Danh sách PO" }}
       />
       <Stack.Screen
         name="po-detail"
-        options={{ title: "Chi tiết PO", headerBackTitle: "Trở về" }}
+        options={{ headerShown: false, title: "Chi tiết PO", headerBackTitle: "Trở về" }}
       />
     </Stack>
   );

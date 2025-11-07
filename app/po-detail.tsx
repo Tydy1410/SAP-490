@@ -1,19 +1,20 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, ActivityIndicator, FlatList } from "react-native";
-import { useLocalSearchParams } from "expo-router";
+import {
+  View,
+  Text,
+  ActivityIndicator,
+  ScrollView,
+  TouchableOpacity,
+} from "react-native";
+import { router, useLocalSearchParams } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { fetchPODetail } from "../../SAP-490/services/poService";
 
 function formatODataDate(odataDate?: string): string {
   if (!odataDate) return "-";
   const match = /\/Date\((\d+)\)\//.exec(odataDate);
-  if (match && match[1]) {
-    const timestamp = parseInt(match[1], 10);
-    const date = new Date(timestamp);
-    return date.toLocaleDateString("vi-VN", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
+  if (match?.[1]) {
+    return new Date(parseInt(match[1])).toLocaleDateString("vi-VN");
   }
   return "-";
 }
@@ -28,8 +29,6 @@ export default function PODetailScreen() {
       try {
         const res = await fetchPODetail(po_id);
         setDetail(res);
-      } catch (err) {
-        console.error("❌ Lỗi khi fetch PO detail:", err);
       } finally {
         setLoading(false);
       }
@@ -39,113 +38,167 @@ export default function PODetailScreen() {
 
   if (loading)
     return (
-      <View className="flex-1 justify-center items-center bg-gray-50">
+      <SafeAreaView className="flex-1 items-center justify-center bg-gray-100">
         <ActivityIndicator size="large" color="#0a6ed1" />
-        <Text className="mt-3 text-gray-600">Đang tải chi tiết PO {po_id}...</Text>
-      </View>
+        <Text className="mt-3 text-gray-600">Đang tải chi tiết PO...</Text>
+      </SafeAreaView>
     );
 
   if (!detail)
     return (
-      <View className="flex-1 justify-center items-center bg-gray-50">
-        <Text className="text-gray-600 text-base">
-          Không tìm thấy thông tin cho PO {po_id}
-        </Text>
-      </View>
+      <SafeAreaView className="flex-1 items-center justify-center bg-gray-100">
+        <Text className="text-gray-600">Không tìm thấy dữ liệu PO</Text>
+      </SafeAreaView>
     );
 
   const items = detail?.to_Item?.results || [];
 
   return (
-    <View className="flex-1 bg-gray-100">
+    <SafeAreaView className="flex-1 bg-gray-100" edges={["top", "left", "right"]}>
+      {/* ✅ BACKGROUND TRÀN STATUS BAR */}
+      <View className="absolute top-0 left-0 right-0 h-48 bg-blue-600" />
 
-      {/* ✅ PO HEADER — KHÔNG CUỘN, KHÔNG NẰM TRONG BOX */}
-      <View className="px-5 pt-5 pb-3 bg-white border-b border-gray-200">
-        <Text className="text-2xl font-extrabold text-[#0a6ed1] mb-2">
-          Purchase Order #{detail.po_id}
+      {/* ✅ HEADER — CỐ ĐỊNH */}
+      <View className="px-5 pt-12 pb-6 bg-blue-600 shadow-xl">
+        <View className="flex-row items-center justify-between">
+          <TouchableOpacity
+            onPress={() => router.back()}
+            className="py-2 px-3 bg-white/20 rounded-full"
+            activeOpacity={0.7}
+          >
+            <Text className="text-white text-xl">←</Text>
+          </TouchableOpacity>
+
+          <Text className="flex-1 ml-3 text-2xl font-extrabold text-white">
+            PO #{detail.po_id}
+          </Text>
+
+          <View className="bg-white/30 px-3 py-1 rounded-xl">
+            <Text className="font-semibold text-white">{detail.comp_code}</Text>
+          </View>
+        </View>
+
+        <Text className="mt-3 text-lg font-semibold text-white">
+          {detail.vendor_name}
         </Text>
 
-        <View className="space-y-1.5">
-          <Text className="text-gray-800">
-            <Text className="font-semibold">Vendor: </Text>
-            {detail.vendor_name ?? "-"}
-          </Text>
-          <Text className="text-gray-800">
-            <Text className="font-semibold">Company Code: </Text>
-            {detail.comp_code}
-          </Text>
-          <Text className="text-gray-800">
-            <Text className="font-semibold">Purchasing Org: </Text>
-            {detail.purch_org}
-          </Text>
-          <Text className="text-gray-800">
-            <Text className="font-semibold">Currency: </Text>
-            {detail.currency}
-          </Text>
-          <Text className="text-gray-800">
-            <Text className="font-semibold">Created By: </Text>
-            {detail.created_by}
-          </Text>
-          <Text className="text-gray-800">
-            <Text className="font-semibold">Date: </Text>
-            {formatODataDate(detail.doc_date)}
+        {/* GRID HEADER INFO */}
+        <View className="flex-row justify-between mt-5">
+          <View>
+            <Text className="text-white/70 text-xs">Purch Org</Text>
+            <Text className="text-white font-semibold">{detail.purch_org}</Text>
+          </View>
+
+          <View>
+            <Text className="text-white/70 text-xs">Currency</Text>
+            <Text className="text-white font-semibold">{detail.currency}</Text>
+          </View>
+
+          <View>
+            <Text className="text-white/70 text-xs">Doc Date</Text>
+            <Text className="text-white font-semibold">
+              {formatODataDate(detail.doc_date)}
+            </Text>
+          </View>
+
+          <View>
+            <Text className="text-white/70 text-xs">Created By</Text>
+            <Text className="text-white font-semibold">{detail.created_by}</Text>
+          </View>
+        </View>
+
+        <View className="mt-6">
+          <Text className="text-xs text-white/70 uppercase">Total Amount</Text>
+          <Text className="text-3xl font-extrabold text-green-300">
+            {Number(detail.total_amount).toLocaleString("vi-VN")} {detail.currency}
           </Text>
         </View>
       </View>
 
-      {/* ✅ ITEM LIST CUỘN — GIỮ NGUYÊN FlatList */}
-      <FlatList
-        data={items}
-        keyExtractor={(i) => `${i.po_number}-${i.item_no}`}
-        ListHeaderComponent={
-          <Text className="text-lg font-semibold text-gray-800 px-5 mt-4 mb-2">
-            Danh sách Item ({items.length})
-          </Text>
-        }
-        renderItem={({ item }) => (
-          <View className="bg-white mx-4 my-2 p-4 rounded-2xl shadow-sm border border-gray-200">
-            <View className="flex-row justify-between mb-1">
-              <Text className="text-base font-semibold text-[#0a6ed1]">
-                Item {item.item_no}
-              </Text>
-              <Text className="text-gray-500 font-medium">{item.material_grp ?? "-"}</Text>
-            </View>
+      {/* ✅ CHỈ CUỘN PHẦN NÀY */}
+      <ScrollView className="flex-1 mt-4">
+        {/* ORDER ITEMS HEADER */}
+        <View className="px-5 flex-row justify-between items-center">
+          <Text className="text-lg font-bold text-gray-800">Order Items</Text>
 
-            <Text className="text-gray-800 mb-1">
-              <Text className="font-semibold">Material:</Text> {item.material}
+          <View className="bg-blue-100 px-3 py-1 rounded-xl">
+            <Text className="text-blue-700 font-semibold text-xs">
+              {items.length} items
             </Text>
-            <Text className="text-gray-800 mb-1">
-              <Text className="font-semibold">Short Text:</Text> {item.short_text ?? "-"}
-            </Text>
-
-            <View className="flex-row justify-between">
-              <Text className="text-gray-800">
-                <Text className="font-semibold">Plant:</Text> {item.plant_name ?? "-"}
-              </Text>
-              <Text className="text-gray-800">
-                <Text className="font-semibold">Storage Loc:</Text> {item.sloc ?? "-"}
-              </Text>
-            </View>
-
-            <View className="flex-row justify-between mt-2">
-              <Text className="text-gray-800">
-                <Text className="font-semibold">Quantity:</Text> {item.qty}
-              </Text>
-              <Text className="text-gray-800">
-                <Text className="font-semibold">Price:</Text> {item.net_price} {item.currency}
-              </Text>
-            </View>
-
-            {item.deliv_date && (
-              <Text className="text-gray-500 mt-1 text-xs">
-                Delivery:{" "}
-                {new Date(parseInt(item.deliv_date.match(/\d+/)[0])).toLocaleDateString("vi-VN")}
-              </Text>
-            )}
           </View>
-        )}
-        contentContainerStyle={{ paddingBottom: 40 }}
-      />
-    </View>
+        </View>
+
+        {/* ITEM LIST */}
+        {items.map((item: any) => (
+          <View
+            key={item.item_no}
+            className="mx-4 mt-3 mb-1 bg-white rounded-2xl p-4 shadow border border-gray-200"
+          >
+            {/* HEADER */}
+            <View className="flex-row justify-between items-center mb-2">
+              <View className="flex-row items-center space-x-2">
+                <View className="bg-blue-600 px-2 py-1 rounded">
+                  <Text className="text-white font-bold text-xs">{item.item_no}</Text>
+                </View>
+
+                <Text className="font-semibold text-gray-800">
+                  Item #{item.item_no}
+                </Text>
+              </View>
+
+              <View className="bg-purple-100 px-2 py-1 rounded-xl">
+                <Text className="text-purple-700 text-xs font-semibold">
+                  {item.material_grp ?? "—"}
+                </Text>
+              </View>
+            </View>
+
+            {/* MATERIAL */}
+            <Text className="font-semibold text-gray-700">Material</Text>
+            <Text className="text-gray-800">{item.material}</Text>
+
+            <Text className="mt-2 font-semibold text-gray-700">Description</Text>
+            <Text className="text-gray-800">{item.short_text}</Text>
+
+            {/* GRID */}
+            <View className="flex-row justify-between mt-3">
+              <View>
+                <Text className="font-semibold text-gray-700">Plant</Text>
+                <Text className="text-gray-800">{item.plant_name}</Text>
+              </View>
+
+              <View>
+                <Text className="font-semibold text-gray-700">Storage</Text>
+                <Text className="text-gray-800">{item.sloc}</Text>
+              </View>
+            </View>
+
+            {/* QUANTITY + PRICE */}
+            <View className="flex-row justify-between mt-3">
+              <View>
+                <Text className="font-semibold text-gray-700">Quantity</Text>
+                <Text className="text-gray-800">{item.qty}</Text>
+              </View>
+
+              <View>
+                <Text className="font-semibold text-gray-700">Unit Price</Text>
+                <Text className="text-green-600 font-bold">
+                  {Number(item.net_price).toLocaleString("vi-VN")} VND
+                </Text>
+              </View>
+            </View>
+
+            {/* DELIVERY */}
+            <View className="bg-green-50 px-3 py-2 rounded-xl mt-3">
+              <Text className="text-green-700 text-sm font-semibold">
+                Delivery: {formatODataDate(item.deliv_date)}
+              </Text>
+            </View>
+          </View>
+        ))}
+
+        <View className="h-20" />
+      </ScrollView>
+    </SafeAreaView>
   );
 }
