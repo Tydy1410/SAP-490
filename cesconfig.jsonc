@@ -2,13 +2,8 @@
 // It is safe to delete this file as it does not affect the functionality of your application.
 {
   "cesVersion": "2.20.1",
-  "projectName": "my-expo-app",
-  "packages": [
-    {
-      "name": "nativewind",
-      "type": "styling"
-    }
-  ],
+  "projectName": "SAP-490",
+  "packages": [],
   "flags": {
     "noGit": false,
     "noInstall": false,

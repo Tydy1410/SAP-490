@@ -45,6 +45,37 @@ export async function fetchPOHeaders(page = 1, pageSize = 40, filters: POFilter 
   return json?.d?.results || [];
 }
 
+// === Fetch tổng số PO (cho "X PO found") ===
+export async function fetchPOCount(filters: POFilter = {}): Promise<number> {
+  const filterClauses: string[] = [];
+
+  if (filters.comp_code) filterClauses.push(`comp_code eq '${filters.comp_code}'`);
+  if (filters.vendor) filterClauses.push(`vendor eq '${filters.vendor}'`);
+  if (filters.purch_org) filterClauses.push(`purch_org eq '${filters.purch_org}'`);
+  if (filters.po_id) filterClauses.push(`po_id eq '${filters.po_id}'`);
+
+  const filterQuery = filterClauses.length > 0 ? `&$filter=${filterClauses.join(' and ')}` : '';
+
+  // Chỉ lấy $count, không cần data
+  const url = `${BASE_URL}/PO_header/$count?${filterQuery}&sap-client=${CLIENT}`;
+
+  const headers = new Headers();
+  headers.set('Authorization', `Basic ${TOKEN}`);
+  headers.set('Accept', 'text/plain');
+
+  try {
+    const res = await fetch(url, { headers });
+    if (!res.ok) {
+      throw new Error(`Lỗi fetch count: ${res.status}`);
+    }
+    const text = await res.text();
+    return parseInt(text, 10) || 0;
+  } catch (error) {
+    console.error('❌ Fetch count error:', error);
+    return 0;
+  }
+}
+
 // === Fetch chi tiết 1 PO (bao gồm item con) ===
 export async function fetchPODetail(po_id: string): Promise<any> {
   const url = `${BASE_URL}/PO_header('${po_id}')?$expand=to_Item&$format=json&sap-client=${CLIENT}`;

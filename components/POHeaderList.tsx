@@ -1,8 +1,14 @@
 import React, { forwardRef } from "react";
-import { FlatList, View, Text, TouchableOpacity } from "react-native";
-import { useRouter } from "expo-router";
+import { FlatList, View, Text, RefreshControl, Pressable } from "react-native";
+import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
+import { Link } from 'expo-router';
+import { headerListStyles as styles } from '../styles/headerList';
 
-type Props = { data: any[] };
+type Props = {
+  data: any[];
+  refreshing?: boolean;
+  onRefresh?: () => void;
+};
 
 function formatODataDate(odataDate?: string): string {
   if (!odataDate) return "-";
@@ -19,69 +25,104 @@ function formatODataDate(odataDate?: string): string {
   return "-";
 }
 
-const POHeaderList = forwardRef<FlatList, Props>(({ data }, ref) => {
-  const router = useRouter();
-
-  
-
+const POHeaderList = forwardRef<FlatList, Props>(({ data, refreshing = false, onRefresh }, ref) => {
   return (
     <FlatList
       ref={ref}
       data={data}
       keyExtractor={(item, idx) => item?.po_id ?? String(idx)}
-      contentContainerStyle={{ paddingBottom: 40 }}
+      contentContainerStyle={{ paddingBottom: 40, paddingTop: 8 }}
+      refreshControl={
+        onRefresh ? (
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#0a6ed1']}
+            tintColor="#0a6ed1"
+          />
+        ) : undefined
+      }
       renderItem={({ item }) => (
-        <TouchableOpacity
-          activeOpacity={0.85}
-          onPress={() =>
-            router.push({
-              pathname: "/po-detail",
-              params: { po_id: item.po_id },
-            })
-          }
+        <Link
+          href={{
+            pathname: "/po-detail",
+            params: { po_id: item.po_id },
+          }}
+          asChild
         >
-          <View className="bg-white rounded-2xl p-4 mb-3 border border-gray-200 shadow-sm">
-            {/* PO Number + Company */}
-            <View className="flex-row justify-between items-center mb-2">
-              <Text className="text-lg font-bold text-blue-800">
-                PO {item.po_id}
-              </Text>
-              <Text className="text-gray-700 font-semibold">
-                {item.comp_code}
-              </Text>
+          <Pressable style={styles.card}>
+            {/* Header Row */}
+            <View style={styles.headerRow}>
+              <View style={styles.headerLeft}>
+                <View style={styles.poBadge}>
+                  <Text style={styles.poBadgeText}>PO</Text>
+                </View>
+                <Text style={styles.poId} numberOfLines={1}>
+                  {item.po_id}
+                </Text>
+              </View>
+              <View style={styles.compCodeBadge}>
+                <Text style={styles.compCodeText}>
+                  {item.comp_code}
+                </Text>
+              </View>
             </View>
 
             {/* Vendor */}
-            <Text className="text-gray-800 font-medium mb-1">
-              {item.vendor_name ?? item.vendor}
-            </Text>
+            <View style={styles.vendorRow}>
+              <MaterialCommunityIcons name="office-building" size={18} color="#4b5563" />
+              <Text style={styles.vendorText} numberOfLines={1}>
+                {item.vendor_name ?? item.vendor}
+              </Text>
+            </View>
 
             {/* Purchasing Org */}
-            <Text className="text-gray-500 text-sm mb-2">
-              {item.purch_org_name ?? item.purch_org}
-            </Text>
+            <View style={styles.purchOrgRow}>
+              <MaterialCommunityIcons name="factory" size={16} color="#6b7280" />
+              <Text style={styles.purchOrgText} numberOfLines={1}>
+                {item.purch_org_name ?? item.purch_org}
+              </Text>
+            </View>
 
-            {/* Total + Currency + Date + Created By */}
-            <View className="flex-row justify-between items-end">
+            {/* Divider */}
+            <View style={styles.divider} />
+
+            {/* Bottom Row: Amount + Date */}
+            <View style={styles.bottomRow}>
               <View>
-                <Text className="text-gray-900 font-semibold text-base">
-                  {Number(item.total_amount || 0).toLocaleString("vi-VN")}{" "}
-                  {item.currency}
-                </Text>
-                <Text className="text-gray-500 text-xs">Total Amount</Text>
+                <Text style={styles.amountLabel}>Total Amount</Text>
+                <View style={styles.amountRow}>
+                  <FontAwesome5 name="dollar-sign" size={14} color="#10b981" />
+                  <Text style={styles.amountValue}>
+                    {Number(item.total_amount || 0).toLocaleString("vi-VN")}
+                  </Text>
+                  <Text style={styles.currency}>{item.currency}</Text>
+                </View>
               </View>
 
-              <View className="items-end">
-                <Text className="text-gray-700 font-medium text-sm">
+              <View style={styles.dateSection}>
+                <View style={styles.dateLabelRow}>
+                  <Ionicons name="calendar-outline" size={12} color="#6b7280" />
+                  <Text style={styles.dateLabel}>Date</Text>
+                </View>
+                <Text style={styles.dateValue}>
                   {formatODataDate(item.doc_date)}
                 </Text>
-                <Text className="text-gray-500 text-xs">
-                  Created by {item.created_by}
-                </Text>
+                <View style={styles.createdByRow}>
+                  <Ionicons name="person-circle-outline" size={12} color="#9ca3af" />
+                  <Text style={styles.createdBy}>
+                    {item.created_by}
+                  </Text>
+                </View>
               </View>
             </View>
-          </View>
-        </TouchableOpacity>
+
+            {/* Status indicator */}
+            <View style={styles.statusIndicator}>
+              <View style={styles.statusDot} />
+            </View>
+          </Pressable>
+        </Link>
       )}
     />
   );
