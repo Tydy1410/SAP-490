@@ -137,7 +137,7 @@ export async function loginOData(username: string, password: string) {
     console.warn(`⚠️ SAP trả về mã: ${response.status}`);
     return { success: false };
   } catch (error: any) {
-    console.error("🔥 Lỗi khi đăng nhập OData:", error.message);
+    //console.error("🔥 Lỗi khi đăng nhập OData:", error.message);
     return { success: false };
   } finally {
     clearTimeout(timeout);
