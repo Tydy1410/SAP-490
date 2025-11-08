@@ -1,52 +1,71 @@
 import CustomButton from "components/CustomButton";
-import React, { useRef, useEffect } from "react";
+import React from "react";
 import { router } from "expo-router";
-import { View, Text, Image, TouchableOpacity, Animated } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { View, Text, Image } from "react-native";
 import "../global.css";
 
 export default function WelcomeScreen({ navigation }: any) {
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 600,
-      useNativeDriver: true,
-    }).start();
-  }, []);
-
   return (
-    <View className="flex-1 bg-white">
-      {/* ✅ Background Gradient Layer */}
-      <View className="absolute inset-0 bg-gradient-to-b from-blue-600 to-purple-600" />
+    <View className="flex-1 bg-white items-center justify-center px-6">
+      {/* Background circles */}
+      <View className="absolute -top-32 -right-32 w-80 h-80 bg-blue-400 rounded-full opacity-10" />
+      <View className="absolute -bottom-32 -left-32 w-80 h-80 bg-cyan-400 rounded-full opacity-10" />
 
-      <SafeAreaView className="flex-1 items-center justify-center px-8">
-        <Animated.View style={{ opacity: fadeAnim }} className="items-center">
-          
+      {/* Logo Container */}
+      <View className="mb-10">
+        <View className="bg-white rounded-3xl p-10 border-2 border-blue-100">
           <Image
-            source={require("../assets/welcome_page.png")} 
-            className="h-64 w-64 mb-6"
+            source={require("../assets/welcome_page.png")}
+            className="h-48 w-48"
             resizeMode="contain"
           />
+        </View>
+      </View>
 
-          <Text className="text-3xl font-extrabold text-blue-600  text-center mb-3">
-            Welcome to PO Manager
-          </Text>
+      {/* Title Section */}
+      <View className="mb-4 items-center">
+        <Text className="text-6xl font-black text-slate-800 text-center leading-tight mb-3">
+          PO Manager
+        </Text>
+        <View className="flex-row items-center">
+          <View className="h-1 w-20 bg-blue-600 rounded-l-full" />
+          <View className="h-1 w-16 bg-blue-500" />
+          <View className="h-1 w-12 bg-cyan-500" />
+          <View className="h-1 w-16 bg-cyan-400" />
+          <View className="h-1 w-20 bg-cyan-600 rounded-r-full" />
+        </View>
+      </View>
 
-          <Text className="text-center font-semibold text-blue-600 text-base leading-6 mb-8">
-            Quản lý Purchase Orders dễ dàng — theo dõi, lọc, kiểm tra 
-            và xem chi tiết PO một cách nhanh chóng và chính xác.
-          </Text>
+      {/* Subtitle */}
+      <View className="mb-12 px-6">
+        <Text className="text-center text-slate-500 text-base leading-7 font-medium">
+          Purchase Order Management
+        </Text>
+        <Text className="text-center text-blue-600 text-xl leading-8 font-bold mt-1">
+          Simple & Accurate
+        </Text>
+      </View>
 
-           <CustomButton
-            title="Continue with your account"
-            handlePress={() => router.push("/sign-in")}
-            containerStyles="w-full mx-auto px-5 py-5 bg-blue-400 rounded-xl"
-            textStyles="text-white text-xl font-semibold"
-          />
-        </Animated.View>
-      </SafeAreaView>
+      {/* CTA Button */}
+      <View className="w-full px-2">
+        <CustomButton
+          title="Get Started"
+          handlePress={() => router.replace("/sign-in")}
+          containerStyles="w-full bg-blue-600 rounded-2xl px-8 py-6"
+          textStyles="text-white text-xl font-bold text-center"
+        />
+      </View>
+
+      <Text className="text-slate-400 text-sm mt-5 text-center font-medium">
+        Sign in to continue
+      </Text>
+
+      {/* Footer Credit */}
+      <View className="absolute bottom-6 self-center">
+        <Text className="text-slate-300 text-xs text-center font-light">
+          CREATED BY FA25SAP11
+        </Text>
+      </View>
     </View>
   );
 }
