@@ -144,3 +144,30 @@ export async function loginOData(username: string, password: string) {
     console.log("🕓 Kết thúc request (đã clear timeout).");
   }
 }
+export async function fetchPOHistory(poId: string) {
+  const url =
+    `https://s40lp1.ucc.cit.tum.de/sap/opu/odata/sap/Z_UI_203_HISTORY/History` +
+    `?$filter=PoId eq '${poId}'` +
+    `&sap-client=324&$format=json`;
+
+  try {
+    const response = await fetch(url, {
+      headers: {
+        Authorization: `Basic ${TOKEN}`,
+        Accept: "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Lỗi fetch PO History: HTTP ${response.status}`);
+    }
+
+    const json = await response.json();
+
+    // SAP OData V2 luôn trả về d.results
+    return json?.d?.results ?? [];
+  } catch (error) {
+    console.error("❌ Fetch PO History error:", error);
+    return [];
+  }
+}
