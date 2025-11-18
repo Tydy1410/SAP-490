@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -7,37 +7,32 @@ import {
   ActivityIndicator,
   Animated,
   Easing,
-} from "react-native";
-import { router, useLocalSearchParams } from "expo-router";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons, MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
+} from 'react-native';
+import { router, useLocalSearchParams } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons, MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 
-import {
-  fetchPODetail,
-  fetchPOHistory,
-} from "../../../SAP-490/services/poService";
+import { fetchPODetail, fetchPOHistory } from '../../../SAP-490/services/poService';
 
-import LoadingScreen from "../../components/LoadingScreen";
-import EmptyState from "../../components/EmptyState";
+import LoadingScreen from '../../components/LoadingScreen';
+import EmptyState from '../../components/EmptyState';
 
 // ==== FORMATTER ====
 
 function formatODataDate(odataDate?: string): string {
-  if (!odataDate) return "-";
+  if (!odataDate) return '-';
   const match = /\/Date\((\d+)\)\//.exec(odataDate);
-  if (match?.[1]) return new Date(parseInt(match[1])).toLocaleDateString("vi-VN");
-  return "-";
+  if (match?.[1]) return new Date(parseInt(match[1])).toLocaleDateString('vi-VN');
+  return '-';
 }
 
 function formatSAPTime(time?: string): string {
-  if (!time) return "-";
+  if (!time) return '-';
   const m = time.match(/PT(\d+)H(\d+)M(\d+)S/);
   if (!m) return time;
-  return `${m[1].padStart(2, "0")}:${m[2].padStart(2, "0")}:${m[3].padStart(2, "0")}`;
+  return `${m[1].padStart(2, '0')}:${m[2].padStart(2, '0')}:${m[3].padStart(2, '0')}`;
 }
-
-// ==== MAIN SCREEN ====
 
 export default function PODetailScreen() {
   const { po_id } = useLocalSearchParams<{ po_id: string }>();
@@ -45,17 +40,15 @@ export default function PODetailScreen() {
   const [detail, setDetail] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  // === HISTORY STATE ===
   const [showHistory, setShowHistory] = useState(false);
   const [history, setHistory] = useState<any[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
 
-  // === ANIMATION ===
   const slideAnim = useRef(new Animated.Value(0)).current;
 
   const translateY = slideAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [350, 0], // slide-up
+    outputRange: [350, 0],
   });
 
   useEffect(() => {
@@ -77,7 +70,6 @@ export default function PODetailScreen() {
     }
   }, [showHistory]);
 
-  // ==== LOAD DETAIL ====
   useEffect(() => {
     const loadDetail = async () => {
       try {
@@ -113,39 +105,34 @@ export default function PODetailScreen() {
   const items = detail?.to_Item?.results || [];
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-100" edges={["top", "left", "right"]}>
-
+    <SafeAreaView className="flex-1 bg-gray-100" edges={['top', 'left', 'right']}>
       {/* ==== HEADER BG ==== */}
       <LinearGradient
-        colors={["#1e40af", "#2563eb", "#3b82f6"]}
-        style={{ position: "absolute", top: 0, left: 0, right: 0, height: 192 }}
+        colors={['#1e40af', '#2563eb', '#3b82f6']}
+        style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 192 }}
       />
 
       {/* ==== HEADER CONTENT ==== */}
       <LinearGradient
-        colors={["#1e40af", "#2563eb", "#3b82f6"]}
+        colors={['#1e40af', '#2563eb', '#3b82f6']}
         style={{
           paddingHorizontal: 20,
           paddingTop: 48,
           paddingBottom: 24,
-        }}
-      >
+        }}>
         <View className="flex-row items-center justify-between">
           <TouchableOpacity
             onPress={() => router.back()}
-            className="py-2 px-3 bg-white/20 rounded-full"
-          >
+            className="rounded-full bg-white/20 px-3 py-2">
             <Ionicons name="arrow-back" size={22} color="white" />
           </TouchableOpacity>
 
-          <View className="flex-1 ml-3 flex-row items-center">
+          <View className="ml-3 flex-1 flex-row items-center">
             <MaterialIcons name="receipt" size={24} color="white" />
-            <Text className="ml-2 text-2xl font-extrabold text-white">
-              PO {detail.po_id}
-            </Text>
+            <Text className="ml-2 text-2xl font-extrabold text-white">PO {detail.po_id}</Text>
           </View>
 
-          <View className="bg-white/30 px-3 py-1 rounded-xl flex-row items-center">
+          <View className="flex-row items-center rounded-xl bg-white/30 px-3 py-1">
             <MaterialIcons name="business" size={14} color="white" />
             <Text className="ml-1 font-semibold text-white">{detail.comp_code}</Text>
           </View>
@@ -153,44 +140,40 @@ export default function PODetailScreen() {
 
         <View className="mt-3 flex-row items-center">
           <Ionicons name="people" size={18} color="white" />
-          <Text className="ml-2 text-lg font-semibold text-white">
-            {detail.vendor_name}
-          </Text>
+          <Text className="ml-2 text-lg font-semibold text-white">{detail.vendor_name}</Text>
         </View>
 
-        <View className="flex-row justify-between mt-5">
+        <View className="mt-5 flex-row justify-between">
           {/* Purch Org */}
           <View>
-            <Text className="text-white/70 text-xs">Purch Org</Text>
-            <Text className="text-white font-semibold">{detail.purch_org}</Text>
+            <Text className="text-xs text-white/70">Purch Org</Text>
+            <Text className="font-semibold text-white">{detail.purch_org}</Text>
           </View>
 
           {/* Currency */}
           <View>
-            <Text className="text-white/70 text-xs">Currency</Text>
-            <Text className="text-white font-semibold">{detail.currency}</Text>
+            <Text className="text-xs text-white/70">Currency</Text>
+            <Text className="font-semibold text-white">{detail.currency}</Text>
           </View>
 
           {/* Doc Date */}
           <View>
-            <Text className="text-white/70 text-xs">Doc Date</Text>
-            <Text className="text-white font-semibold">
-              {formatODataDate(detail.doc_date)}
-            </Text>
+            <Text className="text-xs text-white/70">Doc Date</Text>
+            <Text className="font-semibold text-white">{formatODataDate(detail.doc_date)}</Text>
           </View>
 
           {/* Created */}
           <View>
-            <Text className="text-white/70 text-xs">Created By</Text>
-            <Text className="text-white font-semibold">{detail.created_by}</Text>
+            <Text className="text-xs text-white/70">Created By</Text>
+            <Text className="font-semibold text-white">{detail.created_by}</Text>
           </View>
         </View>
 
         {/* TOTAL */}
         <View className="mt-6">
-          <Text className="text-xs text-white/70 uppercase">TOTAL AMOUNT</Text>
+          <Text className="text-xs uppercase text-white/70">TOTAL AMOUNT</Text>
           <Text className="text-3xl font-extrabold text-green-300">
-            {Number(detail.total_amount).toLocaleString("vi-VN")} {detail.currency}
+            {Number(detail.total_amount).toLocaleString('vi-VN')} {detail.currency}
           </Text>
         </View>
 
@@ -198,29 +181,28 @@ export default function PODetailScreen() {
         <View className="mt-4">
           <TouchableOpacity
             onPress={() => setShowHistory(true)}
-            className="flex-row items-center bg-white/25 px-3 py-2 rounded-2xl"
-          >
+            className="flex-row items-center rounded-2xl bg-white/25 px-3 py-2">
             <Ionicons name="time-outline" size={18} color="#FFFFFF" />
-            <Text className="ml-2 text-white font-semibold">History</Text>
+            <Text className="ml-2 font-semibold text-white">History</Text>
           </TouchableOpacity>
         </View>
       </LinearGradient>
 
       {/* ==== ITEMS ==== */}
-      <ScrollView className="flex-1 mt-4">
+      <ScrollView className="mt-4 flex-1">
         {items.length === 0 ? (
           <EmptyState icon="inventory" title="No Items Found" message="This PO has no items." />
         ) : (
           <>
-            <View className="px-5 flex-row justify-between items-center">
+            <View className="flex-row items-center justify-between px-5">
               <View className="flex-row items-center">
                 <MaterialIcons name="inventory" size={22} color="#1F2937" />
                 <Text className="ml-2 text-lg font-bold text-gray-800">Order Items</Text>
               </View>
 
-              <View className="bg-blue-100 px-3 py-1 rounded-xl flex-row items-center">
+              <View className="flex-row items-center rounded-xl bg-blue-100 px-3 py-1">
                 <Ionicons name="cube" size={14} color="#1D4ED8" />
-                <Text className="ml-1 text-blue-700 font-semibold text-xs">
+                <Text className="ml-1 text-xs font-semibold text-blue-700">
                   {items.length} items
                 </Text>
               </View>
@@ -229,72 +211,75 @@ export default function PODetailScreen() {
             {items.map((item: any) => (
               <View
                 key={item.item_no}
-                className="mx-4 mt-3 mb-1 bg-white rounded-2xl p-4 shadow border border-gray-200"
-              >
+                className="mx-4 mb-1 mt-3 rounded-2xl border border-gray-200 bg-white p-4 shadow">
                 {/* Item Header */}
-                <View className="flex-row justify-between items-center mb-2">
+                <View className="mb-2 flex-row items-center justify-between">
                   <View className="flex-row items-center">
-                    <View className="bg-blue-600 px-2 py-1 rounded">
-                      <Text className="text-white font-bold text-xs">{item.item_no}</Text>
+                    <View
+                      className={
+                        `rounded px-2 py-1 ` +
+                        (item.del_item == 'L' ? 'bg-red-600' : 'bg-blue-600')
+                      }>
+                      <Text className="text-xs font-bold text-white">{item.item_no}</Text>
                     </View>
 
                     <Text className="ml-2 font-semibold text-gray-800">Item</Text>
                   </View>
 
-                  <View className="bg-purple-100 px-2 py-1 rounded-xl flex-row items-center">
+                  <View className="flex-row items-center rounded-xl bg-purple-100 px-2 py-1">
                     <MaterialIcons name="category" size={12} color="#7C3AED" />
-                    <Text className="ml-1 text-purple-700 text-xs font-semibold">
-                      {item.material_grp ?? "—"}
+                    <Text className="ml-1 text-xs font-semibold text-purple-700">
+                      {item.material_grp ?? '—'}
                     </Text>
                   </View>
                 </View>
 
                 {/* Material */}
-                <View className="flex-row items-center mt-2">
+                <View className="mt-2 flex-row items-center">
                   <MaterialIcons name="widgets" size={16} color="#374151" />
                   <Text className="ml-2 font-semibold text-gray-700">Material</Text>
                 </View>
                 <Text className="ml-6 text-gray-800">{item.material}</Text>
 
                 {/* Description */}
-                <View className="flex-row items-center mt-2">
+                <View className="mt-2 flex-row items-center">
                   <Ionicons name="document-text" size={16} color="#374151" />
                   <Text className="ml-2 font-semibold text-gray-700">Description</Text>
                 </View>
                 <Text className="ml-6 text-gray-800">{item.short_text}</Text>
 
                 {/* Plant + Sloc */}
-                <View className="flex-row justify-between mt-3">
+                <View className="mt-3 flex-row justify-between">
                   <View className="flex-1">
-                    <Text className="text-gray-700 text-sm font-semibold">Plant</Text>
+                    <Text className="text-sm font-semibold text-gray-700">Plant</Text>
                     <Text className="ml-5 text-gray-800">{item.plant_name}</Text>
                   </View>
 
                   <View className="flex-1">
-                    <Text className="text-gray-700 text-sm font-semibold">Storage</Text>
+                    <Text className="text-sm font-semibold text-gray-700">Storage</Text>
                     <Text className="ml-5 text-gray-800">{item.sloc}</Text>
                   </View>
                 </View>
 
                 {/* Qty + Price */}
-                <View className="flex-row justify-between mt-3">
+                <View className="mt-3 flex-row justify-between">
                   <View className="flex-1">
-                    <Text className="text-gray-700 text-sm font-semibold">Quantity</Text>
+                    <Text className="text-sm font-semibold text-gray-700">Quantity</Text>
                     <Text className="ml-5 text-gray-800">{item.qty}</Text>
                   </View>
 
                   <View className="flex-1">
-                    <Text className="text-gray-700 text-sm font-semibold">Unit Price</Text>
-                    <Text className="ml-5 text-green-600 font-bold">
-                      {Number(item.net_price).toLocaleString("vi-VN")} VND
+                    <Text className="text-sm font-semibold text-gray-700">Unit Price</Text>
+                    <Text className="ml-5 font-bold text-green-600">
+                      {Number(item.net_price).toLocaleString('vi-VN')} VND
                     </Text>
                   </View>
                 </View>
 
                 {/* Delivery */}
-                <View className="bg-green-50 px-3 py-2 rounded-xl mt-3 flex-row items-center">
+                <View className="mt-3 flex-row items-center rounded-xl bg-green-50 px-3 py-2">
                   <Ionicons name="checkmark-done-circle" size={18} color="#059669" />
-                  <Text className="ml-2 text-green-700 text-sm font-semibold">
+                  <Text className="ml-2 text-sm font-semibold text-green-700">
                     Delivery: {formatODataDate(item.deliv_date)}
                   </Text>
                 </View>
@@ -311,14 +296,8 @@ export default function PODetailScreen() {
       ===================================================== */}
       {showHistory && (
         <View className="absolute inset-0">
-
           {/* Overlay fade */}
-          <Animated.View
-            style={[
-              { opacity: slideAnim },
-            ]}
-            className="absolute inset-0 bg-black/40"
-          >
+          <Animated.View style={[{ opacity: slideAnim }]} className="absolute inset-0 bg-black/40">
             <TouchableOpacity
               className="absolute inset-0"
               onPress={() => setShowHistory(false)}
@@ -333,14 +312,13 @@ export default function PODetailScreen() {
                 transform: [{ translateY: translateY }],
               },
             ]}
-            className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl p-5 max-h-[70%]"
-          >
+            className="absolute bottom-0 left-0 right-0 max-h-[70%] rounded-t-3xl bg-white p-5">
             {/* Handle */}
-            <View className="items-center mb-3">
-              <View className="w-12 h-1.5 bg-gray-300 rounded-full" />
+            <View className="mb-3 items-center">
+              <View className="h-1.5 w-12 rounded-full bg-gray-300" />
             </View>
 
-            <View className="flex-row justify-between items-center mb-4">
+            <View className="mb-4 flex-row items-center justify-between">
               <Text className="text-lg font-bold text-gray-800">PO History</Text>
               <TouchableOpacity onPress={() => setShowHistory(false)}>
                 <Ionicons name="close-circle" size={26} color="#374151" />
@@ -349,22 +327,21 @@ export default function PODetailScreen() {
 
             {/* Loading indicator */}
             {loadingHistory ? (
-              <View className="py-10 items-center">
+              <View className="items-center py-10">
                 <ActivityIndicator size="large" color="#2563eb" />
                 <Text className="mt-3 text-gray-600">Đang tải lịch sử...</Text>
               </View>
             ) : history.length === 0 ? (
-              <Text className="text-center text-gray-500 py-4">No history found.</Text>
+              <Text className="py-4 text-center text-gray-500">No history found.</Text>
             ) : (
               <ScrollView className="pt-1">
                 {history.map((h) => (
                   <View
                     key={h.LogId}
-                    className="mb-4 p-4 bg-gray-50 rounded-xl border border-gray-200"
-                  >
+                    className="mb-4 rounded-xl border border-gray-200 bg-gray-50 p-4">
                     <Text className="text-sm font-bold text-blue-600">{h.Action}</Text>
 
-                    <Text className="text-xs text-gray-500 mt-1">
+                    <Text className="mt-1 text-xs text-gray-500">
                       Item: <Text className="font-semibold">{h.ItemNo}</Text>
                     </Text>
 
@@ -373,17 +350,17 @@ export default function PODetailScreen() {
                     </Text>
 
                     {(h.OldValue || h.NewValue) && (
-                      <Text className="text-xs text-gray-600 mt-1">
-                        {h.OldValue || "-"} → {h.NewValue || "-"}
+                      <Text className="mt-1 text-xs text-gray-600">
+                        {h.OldValue || '-'} → {h.NewValue || '-'}
                       </Text>
                     )}
 
-                    <Text className="text-xs text-gray-500 mt-2">
+                    <Text className="mt-2 text-xs text-gray-500">
                       User: <Text className="font-semibold">{h.Username}</Text>
                     </Text>
 
                     <Text className="text-xs text-gray-500">
-                      Date:{" "}
+                      Date:{' '}
                       <Text className="font-semibold">
                         {formatODataDate(h.ChangeDate)} {formatSAPTime(h.ChangeTime)}
                       </Text>

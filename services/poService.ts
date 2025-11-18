@@ -1,7 +1,6 @@
 // services/poService.ts
 import axios from 'axios';
 
-
 const USERNAME = 'DEV-203';
 const PASSWORD = 'Cctn2003@@@';
 const TOKEN = btoa(`${USERNAME}:${PASSWORD}`);
@@ -47,10 +46,9 @@ export async function fetchPOHeaders(page = 1, pageSize = 40, filters: POFilter 
   const json = await res.json();
   return json?.d?.results || [];
 }
-
-// === Fetch chi tiết 1 PO (bao gồm item con) ===
 export async function fetchPODetail(po_id: string): Promise<any> {
-  const url = `${BASE_URL}/PO_header('${po_id}')?$expand=to_Item&$format=json&sap-client=${CLIENT}`;
+  const url =
+    `https://s40lp1.ucc.cit.tum.de/sap/opu/odata/sap/ZSB_PO_HEADER_203_2/PO_header('${po_id}')?$expand=to_Item&sap-client=324`;
 
   try {
     const response = await fetch(url, {
@@ -67,7 +65,7 @@ export async function fetchPODetail(po_id: string): Promise<any> {
     const json = await response.json();
     const data = json?.d ?? {};
 
-    if (data?.to_Item?.results) {
+    if (data.to_Item?.results) {
       data.to_Item.results.sort((a: any, b: any) => Number(a.item_no) - Number(b.item_no));
     }
 
@@ -80,43 +78,43 @@ export async function fetchPODetail(po_id: string): Promise<any> {
 
 // === Login OData bằng Basic Auth ===
 export async function loginOData(username: string, password: string) {
- const TEST_URL =
-    "https://s40lp1.ucc.cit.tum.de/sap/opu/odata/sap/ZSB_PO_HEADER_203_2/PO_header?$top=1&$select=po_id&$format=json&sap-client=324";
+  const TEST_URL =
+    'https://s40lp1.ucc.cit.tum.de/sap/opu/odata/sap/ZSB_PO_HEADER_203_2/PO_header?$top=1&$select=po_id&$format=json&sap-client=324';
 
   // ✅ Tạo token Basic Auth an toàn (thay vì btoa)
-  const token = typeof btoa !== "undefined"
-  ? btoa(`${username}:${password}`)
-  : Buffer.from(`${username}:${password}`).toString("base64");
-
+  const token =
+    typeof btoa !== 'undefined'
+      ? btoa(`${username}:${password}`)
+      : Buffer.from(`${username}:${password}`).toString('base64');
 
   // ⏳ Tự động timeout sau 5 giây để tránh treo
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 5000);
 
   try {
-    console.log("🚀 Gửi yêu cầu đăng nhập...");
+    console.log('🚀 Gửi yêu cầu đăng nhập...');
     console.log(`👤 Username: ${username}`);
 
     const response = await fetch(TEST_URL, {
-      method: "GET",
+      method: 'GET',
       headers: {
         Authorization: `Basic ${token}`,
-        Accept: "application/json",
-        "Accept-Encoding": "identity",
-        "Cache-Control": "no-store, no-cache, must-revalidate",
-        Pragma: "no-cache",
-        Connection: "close",
+        Accept: 'application/json',
+        'Accept-Encoding': 'identity',
+        'Cache-Control': 'no-store, no-cache, must-revalidate',
+        Pragma: 'no-cache',
+        Connection: 'close',
       },
-      redirect: "follow",
-      credentials: "omit",
+      redirect: 'follow',
+      credentials: 'omit',
       signal: controller.signal,
     });
 
-    console.log("📡 HTTP Status:", response.status);
+    console.log('📡 HTTP Status:', response.status);
 
     // ❌ Sai user/pass → 401 hoặc 403
     if (response.status === 401 || response.status === 403) {
-      console.error("🚫 Sai user hoặc password!");
+      console.error('🚫 Sai user hoặc password!');
       return { success: false };
     }
 
@@ -125,10 +123,10 @@ export async function loginOData(username: string, password: string) {
       const json = await response.json().catch(() => ({}));
 
       if (json?.d?.results?.length > 0) {
-        console.log("✅ Login thành công!");
+        console.log('✅ Login thành công!');
         return { success: true };
       } else {
-        console.warn("⚠️ Login OK nhưng không có dữ liệu trả về (có thể bị giới hạn quyền).");
+        console.warn('⚠️ Login OK nhưng không có dữ liệu trả về (có thể bị giới hạn quyền).');
         return { success: true };
       }
     }
@@ -141,7 +139,7 @@ export async function loginOData(username: string, password: string) {
     return { success: false };
   } finally {
     clearTimeout(timeout);
-    console.log("🕓 Kết thúc request (đã clear timeout).");
+    console.log('🕓 Kết thúc request (đã clear timeout).');
   }
 }
 export async function fetchPOHistory(poId: string) {
@@ -154,7 +152,7 @@ export async function fetchPOHistory(poId: string) {
     const response = await fetch(url, {
       headers: {
         Authorization: `Basic ${TOKEN}`,
-        Accept: "application/json",
+        Accept: 'application/json',
       },
     });
 
@@ -167,7 +165,7 @@ export async function fetchPOHistory(poId: string) {
     // SAP OData V2 luôn trả về d.results
     return json?.d?.results ?? [];
   } catch (error) {
-    console.error("❌ Fetch PO History error:", error);
+    console.error('❌ Fetch PO History error:', error);
     return [];
   }
 }
