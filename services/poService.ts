@@ -47,8 +47,7 @@ export async function fetchPOHeaders(page = 1, pageSize = 40, filters: POFilter 
   return json?.d?.results || [];
 }
 export async function fetchPODetail(po_id: string): Promise<any> {
-  const url =
-    `https://s40lp1.ucc.cit.tum.de/sap/opu/odata/sap/ZSB_PO_HEADER_203_2/PO_header('${po_id}')?$expand=to_Item&sap-client=324`;
+  const url = `https://s40lp1.ucc.cit.tum.de/sap/opu/odata/sap/ZSB_PO_HEADER_203_2/PO_header('${po_id}')?$expand=to_Item&sap-client=324`;
 
   try {
     const response = await fetch(url, {
@@ -166,6 +165,74 @@ export async function fetchPOHistory(poId: string) {
     return json?.d?.results ?? [];
   } catch (error) {
     console.error('❌ Fetch PO History error:', error);
+    return [];
+  }
+}
+
+// =========================
+// 🔐 BASIC AUTH CHO GR/IV
+// =========================
+const GRIV_USER = 'Anpp1';
+const GRIV_PASS = 'HelloWorld15@';
+
+const GRIV_TOKEN =
+  typeof btoa !== 'undefined'
+    ? btoa(`${GRIV_USER}:${GRIV_PASS}`)
+    : Buffer.from(`${GRIV_USER}:${GRIV_PASS}`).toString('base64');
+
+export async function fetchPOGoodsReceipt(poId: string) {
+  const url =
+    `https://s40lp1.ucc.cit.tum.de/sap/opu/odata/sap/C_PURCHASEORDER_FS_SRV/C_PurchaseOrderGoodsReceipt` +
+    `?$filter=PurchaseOrder eq '${poId}'&$format=json`;
+
+  try {
+    
+    const res = await fetch(url, {
+      headers: {
+        Authorization: `Basic ${GRIV_TOKEN}`,
+        Accept: 'application/json',
+      },
+    });
+
+    if (!res.ok) {
+      throw new Error(`Lỗi fetch Goods Receipt: HTTP ${res.status}`);
+    }
+
+    const json = await res.json();
+    return json?.d?.results ?? [];
+  } catch (err) {
+    console.error('❌ Goods Receipt error:', err);
+    return [];
+  }
+}
+
+export async function fetchPOInvoice(poId: string) {
+  const url =
+    `https://s40lp1.ucc.cit.tum.de/sap/opu/odata/sap/API_SUPPLIERINVOICE_PROCESS_SRV/A_SuplrInvcItemPurOrdRef` +
+    `?$expand=to_SupplierInvoiceItmAcctAssgmt` +
+    `&$filter=PurchaseOrder eq '${poId}'` +
+    `&$format=json`;
+
+  try {
+    
+    const res = await fetch(url, {
+      headers: {
+        Authorization: `Basic ${GRIV_TOKEN}`,
+        Accept: 'application/json',
+      },
+    });
+    
+
+    if (!res.ok) {
+      throw new Error(`Lỗi fetch Invoice: HTTP ${res.status}`);
+    }
+
+    const json = await res.json();
+
+    return json?.d?.results ?? [];
+
+  } catch (err) {
+    console.error('❌ Invoice fetch error:', err);
     return [];
   }
 }
