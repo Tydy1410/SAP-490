@@ -10,89 +10,91 @@ import {
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons, MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
+import POExtraInfoModal from '../../components/POExtraInfoModal';
+
 import { fetchPODetail, fetchPOHistory } from '../../../SAP-490/services/poService';
+
+import { fetchPOGoodsReceipt, fetchPOInvoice } from '../../services/poService';
 
 import LoadingScreen from '../../components/LoadingScreen';
 import EmptyState from '../../components/EmptyState';
 
-// ==== FORMATTER ====
-
-function formatODataDate(odataDate?: string): string {
-  if (!odataDate) return '-';
-  const match = /\/Date\((\d+)\)\//.exec(odataDate);
-  if (match?.[1]) return new Date(parseInt(match[1])).toLocaleDateString('vi-VN');
-  return '-';
+// ===== FORMATTERS =====
+function formatODataDate(dt?: string) {
+  if (!dt) return '-';
+  const m = /\/Date\((\d+)\)\//.exec(dt);
+  return m ? new Date(parseInt(m[1])).toLocaleDateString('vi-VN') : '-';
 }
 
-function formatSAPTime(time?: string): string {
+function formatSAPTime(time?: string) {
   if (!time) return '-';
   const m = time.match(/PT(\d+)H(\d+)M(\d+)S/);
-  if (!m) return time;
-  return `${m[1].padStart(2, '0')}:${m[2].padStart(2, '0')}:${m[3].padStart(2, '0')}`;
+  return m ? `${m[1].padStart(2, '0')}:${m[2].padStart(2, '0')}:${m[3].padStart(2, '0')}` : '-';
 }
 
 export default function PODetailScreen() {
   const { po_id } = useLocalSearchParams<{ po_id: string }>();
 
+  // ========== DETAIL ==========
   const [detail, setDetail] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  const [showHistory, setShowHistory] = useState(false);
+  // ========== MODAL ==========
+  const [showExtra, setShowExtra] = useState(false);
+  const [activeTab, setActiveTab] = useState<'history' | 'goods' | 'invoice'>('history');
+
+  // ========== DATA ==========
   const [history, setHistory] = useState<any[]>([]);
+  const [goodsReceipt, setGoodsReceipt] = useState<any[]>([]);
+  const [invoice, setInvoice] = useState<any[]>([]);
+
+  // ========== LOADING ==========
   const [loadingHistory, setLoadingHistory] = useState(false);
+  const [loadingGR, setLoadingGR] = useState(false);
+  const [loadingInvoice, setLoadingInvoice] = useState(false);
 
-  const slideAnim = useRef(new Animated.Value(0)).current;
-
-  const translateY = slideAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [350, 0],
-  });
-
-  useEffect(() => {
-    if (showHistory) {
-      loadHistory();
-      Animated.timing(slideAnim, {
-        toValue: 1,
-        duration: 220,
-        easing: Easing.out(Easing.ease),
-        useNativeDriver: true,
-      }).start();
-    } else {
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 180,
-        easing: Easing.in(Easing.ease),
-        useNativeDriver: true,
-      }).start();
-    }
-  }, [showHistory]);
-
+  // =====================================================
+  //                     LOAD DETAIL
+  // =====================================================
   useEffect(() => {
     const loadDetail = async () => {
-      try {
-        const result = await fetchPODetail(po_id);
-        setDetail(result);
-      } finally {
-        setLoading(false);
-      }
+      const res = await fetchPODetail(po_id);
+      setDetail(res);
+      setLoading(false);
     };
     loadDetail();
   }, [po_id]);
 
-  // ==== LOAD HISTORY ====
+  // =====================================================
+  //               LOAD HISTORY / GR / INVOICE
+  // =====================================================
   const loadHistory = async () => {
-    try {
-      setLoadingHistory(true);
-      const res = await fetchPOHistory(po_id);
-      setHistory(res || []);
-    } finally {
-      setLoadingHistory(false);
-    }
+    setLoadingHistory(true);
+    const res = await fetchPOHistory(po_id);
+    setHistory(res || []);
+    setLoadingHistory(false);
   };
 
+  const loadGoodsReceipt = async () => {
+    setLoadingGR(true);
+    const res = await fetchPOGoodsReceipt(po_id);
+    setGoodsReceipt(res || []);
+    setLoadingGR(false);
+  };
+
+  const loadInvoice = async () => {
+    setLoadingInvoice(true);
+    const res = await fetchPOInvoice(po_id);
+    setInvoice(res || []);
+    setLoadingInvoice(false);
+  };
+
+  // =====================================================
+  //                     RENDER
+  // =====================================================
   if (loading) return <LoadingScreen />;
 
   if (!detail)
@@ -106,20 +108,16 @@ export default function PODetailScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-gray-100" edges={['top', 'left', 'right']}>
-      {/* ==== HEADER BG ==== */}
+      {/* BG */}
       <LinearGradient
         colors={['#1e40af', '#2563eb', '#3b82f6']}
         style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 192 }}
       />
 
-      {/* ==== HEADER CONTENT ==== */}
+      {/* HEADER */}
       <LinearGradient
         colors={['#1e40af', '#2563eb', '#3b82f6']}
-        style={{
-          paddingHorizontal: 20,
-          paddingTop: 48,
-          paddingBottom: 24,
-        }}>
+        style={{ paddingHorizontal: 20, paddingTop: 48, paddingBottom: 24 }}>
         <View className="flex-row items-center justify-between">
           <TouchableOpacity
             onPress={() => router.back()}
@@ -143,26 +141,23 @@ export default function PODetailScreen() {
           <Text className="ml-2 text-lg font-semibold text-white">{detail.vendor_name}</Text>
         </View>
 
+        {/* INFO */}
         <View className="mt-5 flex-row justify-between">
-          {/* Purch Org */}
           <View>
             <Text className="text-xs text-white/70">Purch Org</Text>
             <Text className="font-semibold text-white">{detail.purch_org}</Text>
           </View>
 
-          {/* Currency */}
           <View>
             <Text className="text-xs text-white/70">Currency</Text>
             <Text className="font-semibold text-white">{detail.currency}</Text>
           </View>
 
-          {/* Doc Date */}
           <View>
             <Text className="text-xs text-white/70">Doc Date</Text>
             <Text className="font-semibold text-white">{formatODataDate(detail.doc_date)}</Text>
           </View>
 
-          {/* Created */}
           <View>
             <Text className="text-xs text-white/70">Created By</Text>
             <Text className="font-semibold text-white">{detail.created_by}</Text>
@@ -177,205 +172,149 @@ export default function PODetailScreen() {
           </Text>
         </View>
 
-        {/* BUTTON: HISTORY */}
-        <View className="mt-4">
-          <TouchableOpacity
-            onPress={() => setShowHistory(true)}
-            className="flex-row items-center rounded-2xl bg-white/25 px-3 py-2">
-            <Ionicons name="time-outline" size={18} color="#FFFFFF" />
-            <Text className="ml-2 font-semibold text-white">History</Text>
-          </TouchableOpacity>
+        {/* ACTION BUTTONS */}
+        <View className="mt-4 flex-row space-x-3">
+          {/** NÚT DÙNG CHUNG LOGIC */}
+          {[
+            { key: 'history', icon: 'time-outline', label: 'History' },
+            { key: 'goods', icon: 'cube', label: 'Goods' },
+            { key: 'invoice', icon: 'document-text-outline', label: 'Invoice' },
+          ].map((t) => (
+            <TouchableOpacity
+              key={t.key}
+              onPress={async () => {
+                setShowExtra(true);
+                setActiveTab(t.key as any);
+
+                // fetch all 3 song song
+                setLoadingHistory(true);
+                setLoadingGR(true);
+                setLoadingInvoice(true);
+
+                const [h, g, i] = await Promise.all([
+                  fetchPOHistory(po_id),
+                  fetchPOGoodsReceipt(po_id),
+                  fetchPOInvoice(po_id),
+                ]);
+
+                setHistory(h || []);
+                setGoodsReceipt(g || []);
+                setInvoice(i || []);
+
+                setLoadingHistory(false);
+                setLoadingGR(false);
+                setLoadingInvoice(false);
+              }}
+              className="flex-row items-center rounded-2xl bg-white/25 px-3 py-2">
+              <Ionicons name={t.icon as any} size={18} color="white" />
+              <Text className="ml-2 font-semibold text-white">{t.label}</Text>
+            </TouchableOpacity>
+          ))}
         </View>
       </LinearGradient>
 
-      {/* ==== ITEMS ==== */}
+      {/* ===== ITEMS ===== */}
       <ScrollView className="mt-4 flex-1">
         {items.length === 0 ? (
           <EmptyState icon="inventory" title="No Items Found" message="This PO has no items." />
         ) : (
-          <>
-            <View className="flex-row items-center justify-between px-5">
-              <View className="flex-row items-center">
-                <MaterialIcons name="inventory" size={22} color="#1F2937" />
-                <Text className="ml-2 text-lg font-bold text-gray-800">Order Items</Text>
-              </View>
-
-              <View className="flex-row items-center rounded-xl bg-blue-100 px-3 py-1">
-                <Ionicons name="cube" size={14} color="#1D4ED8" />
-                <Text className="ml-1 text-xs font-semibold text-blue-700">
-                  {items.length} items
-                </Text>
-              </View>
-            </View>
-
-            {items.map((item: any) => (
-              <View
-                key={item.item_no}
-                className="mx-4 mb-1 mt-3 rounded-2xl border border-gray-200 bg-white p-4 shadow">
-                {/* Item Header */}
-                <View className="mb-2 flex-row items-center justify-between">
-                  <View className="flex-row items-center">
-                    <View
-                      className={
-                        `rounded px-2 py-1 ` +
-                        (item.del_item == 'L' ? 'bg-red-600' : 'bg-blue-600')
-                      }>
-                      <Text className="text-xs font-bold text-white">{item.item_no}</Text>
-                    </View>
-
-                    <Text className="ml-2 font-semibold text-gray-800">Item</Text>
+          items.map((item: any) => (
+            <View
+              key={item.item_no}
+              className="mx-4 mb-5 rounded-3xl border border-gray-100 bg-white p-5 shadow-md">
+              {/* ===== HEADER ===== */}
+              <View className="mb-4 flex-row items-center justify-between">
+                {/* LEFT */}
+                <View className="flex-row items-center">
+                  {/* ITEM BADGE */}
+                  <View
+                    className={`mr-2 rounded-full px-3 py-1 ${
+                      item.del_item === 'L' ? 'bg-red-600' : 'bg-blue-600'
+                    }`}>
+                    <Text className="text-xs font-bold text-white">{item.item_no}</Text>
                   </View>
 
-                  <View className="flex-row items-center rounded-xl bg-purple-100 px-2 py-1">
-                    <MaterialIcons name="category" size={12} color="#7C3AED" />
-                    <Text className="ml-1 text-xs font-semibold text-purple-700">
-                      {item.material_grp ?? '—'}
-                    </Text>
-                  </View>
+                  <Text className="text-lg font-semibold text-gray-900">Item</Text>
                 </View>
 
-                {/* Material */}
-                <View className="mt-2 flex-row items-center">
-                  <MaterialIcons name="widgets" size={16} color="#374151" />
-                  <Text className="ml-2 font-semibold text-gray-700">Material</Text>
-                </View>
-                <Text className="ml-6 text-gray-800">{item.material}</Text>
-
-                {/* Description */}
-                <View className="mt-2 flex-row items-center">
-                  <Ionicons name="document-text" size={16} color="#374151" />
-                  <Text className="ml-2 font-semibold text-gray-700">Description</Text>
-                </View>
-                <Text className="ml-6 text-gray-800">{item.short_text}</Text>
-
-                {/* Plant + Sloc */}
-                <View className="mt-3 flex-row justify-between">
-                  <View className="flex-1">
-                    <Text className="text-sm font-semibold text-gray-700">Plant</Text>
-                    <Text className="ml-5 text-gray-800">{item.plant_name}</Text>
-                  </View>
-
-                  <View className="flex-1">
-                    <Text className="text-sm font-semibold text-gray-700">Storage</Text>
-                    <Text className="ml-5 text-gray-800">{item.sloc}</Text>
-                  </View>
-                </View>
-
-                {/* Qty + Price */}
-                <View className="mt-3 flex-row justify-between">
-                  <View className="flex-1">
-                    <Text className="text-sm font-semibold text-gray-700">Quantity</Text>
-                    <Text className="ml-5 text-gray-800">{item.qty}</Text>
-                  </View>
-
-                  <View className="flex-1">
-                    <Text className="text-sm font-semibold text-gray-700">Unit Price</Text>
-                    <Text className="ml-5 font-bold text-green-600">
-                      {Number(item.net_price).toLocaleString('vi-VN')} VND
-                    </Text>
-                  </View>
-                </View>
-
-                {/* Delivery */}
-                <View className="mt-3 flex-row items-center rounded-xl bg-green-50 px-3 py-2">
-                  <Ionicons name="checkmark-done-circle" size={18} color="#059669" />
-                  <Text className="ml-2 text-sm font-semibold text-green-700">
-                    Delivery: {formatODataDate(item.deliv_date)}
+                {/* RIGHT BADGE (material group) */}
+                <View className="flex-row items-center rounded-xl bg-indigo-50 px-3 py-1">
+                  <Ionicons name="pricetag" size={14} color="#4F46E5" />
+                  <Text className="ml-1 text-xs font-semibold text-indigo-700">
+                    {item.material_grp ?? '—'}
                   </Text>
                 </View>
               </View>
-            ))}
 
-            <View className="h-20" />
-          </>
+              {/* ===== MATERIAL CODE ===== */}
+              <View className="flex-row items-center">
+                <MaterialIcons name="qr-code" size={18} color="#4B5563" />
+                <Text className="ml-2 text-base font-bold text-gray-900">{item.material}</Text>
+              </View>
+
+              {/* ===== DESCRIPTION ===== */}
+              <View className="mt-2 flex-row items-center">
+                <Ionicons name="document-text-outline" size={18} color="#6B7280" />
+                <Text className="ml-2 flex-1 text-[15px] leading-5 text-gray-700">
+                  {item.short_text}
+                </Text>
+              </View>
+
+              {/* ===== PLANT / STORAGE ===== */}
+              <View className="mt-5 flex-row justify-between">
+                {/* PLANT */}
+                <View className="flex-1">
+                  <Text className="text-xs text-gray-500">Plant</Text>
+                  <Text className="mt-1 font-semibold leading-5 text-gray-900">
+                    {item.plant_name}
+                  </Text>
+                </View>
+
+                {/* STORAGE */}
+                <View className="flex-1">
+                  <Text className="text-xs text-gray-500">Storage</Text>
+                  <Text className="mt-1 font-semibold text-gray-900">{item.sloc}</Text>
+                </View>
+              </View>
+
+              {/* ===== QUANTITY + PRICE ===== */}
+              <View className="mt-6 flex-row items-end justify-between">
+                {/* QTY */}
+                <View>
+                  <Text className="text-xs text-gray-500">Quantity</Text>
+                  <Text className="mt-1 text-[16px] font-semibold text-gray-900">{item.qty}</Text>
+                </View>
+
+                {/* PRICE */}
+                <View className="items-end">
+                  <Text className="text-xs text-gray-500">Unit Price</Text>
+                  <Text className="mt-1 text-[17px] font-extrabold text-green-600">
+                    {Number(item.net_price).toLocaleString('vi-VN')} VND
+                  </Text>
+                </View>
+              </View>
+            </View>
+          ))
         )}
+
+        <View className="h-20" />
       </ScrollView>
 
       {/* =====================================================
-                  =======  HISTORY MODAL  =======
+                  === EXTRA INFO MODAL (3 TAB) ===
       ===================================================== */}
-      {showHistory && (
-        <View className="absolute inset-0">
-          {/* Overlay fade */}
-          <Animated.View style={[{ opacity: slideAnim }]} className="absolute inset-0 bg-black/40">
-            <TouchableOpacity
-              className="absolute inset-0"
-              onPress={() => setShowHistory(false)}
-              activeOpacity={1}
-            />
-          </Animated.View>
-
-          {/* Bottom sheet */}
-          <Animated.View
-            style={[
-              {
-                transform: [{ translateY: translateY }],
-              },
-            ]}
-            className="absolute bottom-0 left-0 right-0 max-h-[70%] rounded-t-3xl bg-white p-5">
-            {/* Handle */}
-            <View className="mb-3 items-center">
-              <View className="h-1.5 w-12 rounded-full bg-gray-300" />
-            </View>
-
-            <View className="mb-4 flex-row items-center justify-between">
-              <Text className="text-lg font-bold text-gray-800">PO History</Text>
-              <TouchableOpacity onPress={() => setShowHistory(false)}>
-                <Ionicons name="close-circle" size={26} color="#374151" />
-              </TouchableOpacity>
-            </View>
-
-            {/* Loading indicator */}
-            {loadingHistory ? (
-              <View className="items-center py-10">
-                <ActivityIndicator size="large" color="#2563eb" />
-                <Text className="mt-3 text-gray-600">Đang tải lịch sử...</Text>
-              </View>
-            ) : history.length === 0 ? (
-              <Text className="py-4 text-center text-gray-500">No history found.</Text>
-            ) : (
-              <ScrollView className="pt-1">
-                {history.map((h) => (
-                  <View
-                    key={h.LogId}
-                    className="mb-4 rounded-xl border border-gray-200 bg-gray-50 p-4">
-                    <Text className="text-sm font-bold text-blue-600">{h.Action}</Text>
-
-                    <Text className="mt-1 text-xs text-gray-500">
-                      Item: <Text className="font-semibold">{h.ItemNo}</Text>
-                    </Text>
-
-                    <Text className="text-xs text-gray-500">
-                      Field: <Text className="font-semibold">{h.FieldLabel || h.FieldName}</Text>
-                    </Text>
-
-                    {(h.OldValue || h.NewValue) && (
-                      <Text className="mt-1 text-xs text-gray-600">
-                        {h.OldValue || '-'} → {h.NewValue || '-'}
-                      </Text>
-                    )}
-
-                    <Text className="mt-2 text-xs text-gray-500">
-                      User: <Text className="font-semibold">{h.Username}</Text>
-                    </Text>
-
-                    <Text className="text-xs text-gray-500">
-                      Date:{' '}
-                      <Text className="font-semibold">
-                        {formatODataDate(h.ChangeDate)} {formatSAPTime(h.ChangeTime)}
-                      </Text>
-                    </Text>
-
-                    {h.Note ? (
-                      <Text className="mt-1 text-xs text-gray-700">📝 {h.Note}</Text>
-                    ) : null}
-                  </View>
-                ))}
-              </ScrollView>
-            )}
-          </Animated.View>
-        </View>
-      )}
+      <POExtraInfoModal
+        visible={showExtra}
+        onClose={() => setShowExtra(false)}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        history={history}
+        goodsReceipt={goodsReceipt}
+        invoice={invoice}
+        loadingHistory={loadingHistory}
+        loadingGR={loadingGR}
+        loadingInvoice={loadingInvoice}
+      />
     </SafeAreaView>
   );
 }
