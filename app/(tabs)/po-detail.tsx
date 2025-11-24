@@ -173,7 +173,7 @@ export default function PODetailScreen() {
         </View>
 
         {/* ACTION BUTTONS */}
-        <View className="mt-4 flex-row space-x-3">
+        <View className="mt-4 flex-row gap-3">
           {/** NÚT DÙNG CHUNG LOGIC */}
           {[
             { key: 'history', icon: 'time-outline', label: 'History' },
@@ -205,7 +205,7 @@ export default function PODetailScreen() {
                 setLoadingGR(false);
                 setLoadingInvoice(false);
               }}
-              className="flex-row items-center rounded-2xl bg-white/25 px-3 py-2">
+              className="flex-row items-center rounded-2xl bg-white/25 px-4 py-2.5">
               <Ionicons name={t.icon as any} size={18} color="white" />
               <Text className="ml-2 font-semibold text-white">{t.label}</Text>
             </TouchableOpacity>
@@ -228,13 +228,19 @@ export default function PODetailScreen() {
                 <View className="flex-row items-center">
                   {/* ITEM BADGE */}
                   <View
-                    className={`mr-2 rounded-full px-3 py-1 ${
-                      item.del_item === 'L' ? 'bg-red-600' : 'bg-blue-600'
-                    }`}>
+                    className={`mr-2 rounded-full px-3 py-1 ${item.del_item === 'L' ? 'bg-red-600' : 'bg-blue-600'
+                      }`}>
                     <Text className="text-xs font-bold text-white">{item.item_no}</Text>
                   </View>
 
                   <Text className="text-lg font-semibold text-gray-900">Item</Text>
+
+                  {/* DELETED ICON */}
+                  {item.del_item === 'L' ? (
+                    <Ionicons name="trash" size={20} color="#DC2626" style={{ marginLeft: 8 }} />
+                  ) : (
+                    <Ionicons name="checkmark-circle" size={20} color="#10B981" style={{ marginLeft: 8 }} />
+                  )}
                 </View>
 
                 {/* RIGHT BADGE (material group) */}
@@ -282,7 +288,7 @@ export default function PODetailScreen() {
                 {/* QTY */}
                 <View>
                   <Text className="text-xs text-gray-500">Quantity</Text>
-                  <Text className="mt-1 text-[16px] font-semibold text-gray-900">{item.qty}</Text>
+                  <Text className="mt-1 text-[16px] font-semibold text-gray-900">{Number(item.qty).toString()}</Text>
                 </View>
 
                 {/* PRICE */}

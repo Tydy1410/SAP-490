@@ -162,7 +162,24 @@ export async function fetchPOHistory(poId: string) {
     const json = await response.json();
 
     // SAP OData V2 luôn trả về d.results
-    return json?.d?.results ?? [];
+    const results = json?.d?.results ?? [];
+
+    // Sort theo ChangeDate và ChangeTime giảm dần (mới nhất trước)
+    results.sort((a: any, b: any) => {
+      const dateA = a.ChangeDate ? parseInt(/\/Date\((\d+)\)\//.exec(a.ChangeDate)?.[1] || '0') : 0;
+      const dateB = b.ChangeDate ? parseInt(/\/Date\((\d+)\)\//.exec(b.ChangeDate)?.[1] || '0') : 0;
+
+      if (dateA !== dateB) {
+        return dateB - dateA; // Date mới nhất trước
+      }
+
+      // Nếu cùng ngày, sort theo time
+      const timeA = a.ChangeTime || '';
+      const timeB = b.ChangeTime || '';
+      return timeB.localeCompare(timeA); // Time mới nhất trước
+    });
+
+    return results;
   } catch (error) {
     console.error('❌ Fetch PO History error:', error);
     return [];
@@ -186,7 +203,7 @@ export async function fetchPOGoodsReceipt(poId: string) {
     `?$filter=PurchaseOrder eq '${poId}'&$format=json`;
 
   try {
-    
+
     const res = await fetch(url, {
       headers: {
         Authorization: `Basic ${GRIV_TOKEN}`,
@@ -214,14 +231,14 @@ export async function fetchPOInvoice(poId: string) {
     `&$format=json`;
 
   try {
-    
+
     const res = await fetch(url, {
       headers: {
         Authorization: `Basic ${GRIV_TOKEN}`,
         Accept: 'application/json',
       },
     });
-    
+
 
     if (!res.ok) {
       throw new Error(`Lỗi fetch Invoice: HTTP ${res.status}`);
